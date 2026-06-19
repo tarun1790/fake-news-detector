@@ -63,15 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HELPER TO GET DYNAMIC BACKEND API URL ---
     function getApiUrl(endpoint) {
         const storedUrl = localStorage.getItem('luffy_backend_url');
-        const defaultBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? '' : 'http://localhost:8000';
+        const defaultBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? '' : 'https://cuddly-dots-attend.loca.lt';
         const base = storedUrl || defaultBase;
         const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         return `${cleanBase}${endpoint}`;
     }
 
+    // --- API FETCH WRAPPER WITH BYPASS HEADER FOR LOCALTUNNEL ---
+    async function apiFetch(endpoint, options = {}) {
+        const url = getApiUrl(endpoint);
+        options.headers = options.headers || {};
+        options.headers['Bypass-Tunnel-Reminder'] = 'true';
+        return fetch(url, options);
+    }
+
     // Populate current backend URL
     if (settingBackendUrl) {
-        settingBackendUrl.value = localStorage.getItem('luffy_backend_url') || 'http://localhost:8000';
+        settingBackendUrl.value = localStorage.getItem('luffy_backend_url') || 'https://cuddly-dots-attend.loca.lt';
     }
 
     if (btnSaveBackendUrl && settingBackendUrl) {
@@ -195,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSaveSettings.disabled = true;
             btnSaveSettings.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
 
-            const res = await fetch(getApiUrl('/api/settings'), {
+            const res = await apiFetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gemini_api_key: key })
@@ -228,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkSettingsStatus() {
         try {
-            const res = await fetch(getApiUrl('/api/settings'));
+            const res = await apiFetch('/api/settings');
             const data = await res.json();
             
             const setupForm = document.getElementById('settings-setup-form');
@@ -296,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
 
         try {
-            const res = await fetch(getApiUrl(endpoint), {
+            const res = await apiFetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -405,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DASHBOARD DATA LOADING ---
     async function loadDashboardData() {
         try {
-            const res = await fetch(getApiUrl('/api/stats'));
+            const res = await apiFetch('/api/stats');
             const data = await res.json();
             
             // Set simple numeric stats
@@ -518,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HISTORY LOGIC ---
     async function loadHistoryData() {
         try {
-            const res = await fetch(getApiUrl('/api/history'));
+            const res = await apiFetch('/api/history');
             historyData = await res.json();
             renderHistoryTable();
         } catch (err) {
@@ -614,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to delete this scan log from your database?')) return;
         
         try {
-            const res = await fetch(getApiUrl(`/api/history/${id}`), { method: 'DELETE' });
+            const res = await apiFetch(`/api/history/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Delete failed');
             
             // Reload logs

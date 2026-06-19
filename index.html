@@ -342,6 +342,19 @@
                             <i class="fa-solid fa-arrow-rotate-left"></i> Change API Key
                         </button>
                     </div>
+
+                    <!-- Backend Server Connection settings card (Always visible) -->
+                    <div class="settings-card" style="grid-column: 1 / -1; max-width: 500px; margin: 24px auto 0; width: 100%;">
+                        <h3><i class="fa-solid fa-server"></i>Backend Server API URL</h3>
+                        <p class="settings-desc">Specify the backend API server. If hosted on Netlify, enter your deployed server URL or point to a local instance running on http://localhost:8000.</p>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label for="setting-backend-url">Server API URL</label>
+                            <input type="url" id="setting-backend-url" placeholder="http://localhost:8000" style="width: 100%; padding: 12px; background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 8px; color: #ffffff; outline: none;">
+                        </div>
+                        <button id="btn-save-backend-url" class="btn btn-primary btn-glow" style="width: 100%;">
+                            <i class="fa-solid fa-save"></i>Save Connection
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>

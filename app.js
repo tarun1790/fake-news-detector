@@ -57,6 +57,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSaveSettings = document.getElementById('btn-save-settings');
     const apiIndicator = document.getElementById('api-indicator');
     const apiStatusText = document.getElementById('api-status-text');
+    const settingBackendUrl = document.getElementById('setting-backend-url');
+    const btnSaveBackendUrl = document.getElementById('btn-save-backend-url');
+    
+    // --- HELPER TO GET DYNAMIC BACKEND API URL ---
+    function getApiUrl(endpoint) {
+        const storedUrl = localStorage.getItem('luffy_backend_url');
+        const defaultBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? '' : 'http://localhost:8000';
+        const base = storedUrl || defaultBase;
+        const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+        return `${cleanBase}${endpoint}`;
+    }
+
+    // Populate current backend URL
+    if (settingBackendUrl) {
+        settingBackendUrl.value = localStorage.getItem('luffy_backend_url') || 'http://localhost:8000';
+    }
+
+    if (btnSaveBackendUrl && settingBackendUrl) {
+        btnSaveBackendUrl.addEventListener('click', () => {
+            const url = settingBackendUrl.value.trim();
+            if (!url) {
+                localStorage.removeItem('luffy_backend_url');
+                alert('Backend URL reset to default (localhost).');
+                settingBackendUrl.value = 'http://localhost:8000';
+            } else {
+                localStorage.setItem('luffy_backend_url', url);
+                alert(`Backend URL updated to: ${url}`);
+            }
+            checkSettingsStatus();
+            loadDashboardData();
+        });
+    }
     
     // Modal controls
     const detailsModal = document.getElementById('details-modal');
@@ -163,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSaveSettings.disabled = true;
             btnSaveSettings.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
 
-            const res = await fetch('/api/settings', {
+            const res = await fetch(getApiUrl('/api/settings'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gemini_api_key: key })
@@ -196,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkSettingsStatus() {
         try {
-            const res = await fetch('/api/settings');
+            const res = await fetch(getApiUrl('/api/settings'));
             const data = await res.json();
             
             const setupForm = document.getElementById('settings-setup-form');
@@ -264,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
 
         try {
-            const res = await fetch(endpoint, {
+            const res = await fetch(getApiUrl(endpoint), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -373,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DASHBOARD DATA LOADING ---
     async function loadDashboardData() {
         try {
-            const res = await fetch('/api/stats');
+            const res = await fetch(getApiUrl('/api/stats'));
             const data = await res.json();
             
             // Set simple numeric stats
@@ -486,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HISTORY LOGIC ---
     async function loadHistoryData() {
         try {
-            const res = await fetch('/api/history');
+            const res = await fetch(getApiUrl('/api/history'));
             historyData = await res.json();
             renderHistoryTable();
         } catch (err) {
@@ -582,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to delete this scan log from your database?')) return;
         
         try {
-            const res = await fetch(`/api/history/${id}`, { method: 'DELETE' });
+            const res = await fetch(getApiUrl(`/api/history/${id}`), { method: 'DELETE' });
             if (!res.ok) throw new Error('Delete failed');
             
             // Reload logs

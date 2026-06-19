@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luffy AI - World-Class Fake News Detector</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Landing Splash Screen -->
+    <section class="landing-screen">
+        <div class="landing-content">
+            <h1 class="hero-logo">Luffy <span>AI</span></h1>
+            <p class="hero-tagline">The Ultimate Media Integrity Platform</p>
+        </div>
+        <div class="scroll-prompt" id="btn-scroll-enter">
+            <span>Scroll to Explore</span>
+            <i class="fa-solid fa-chevron-down bounce-arrow"></i>
+        </div>
+    </section>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <h2 class="logo-text">Luffy <span>AI</span></h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                </a>
+                <a href="#analyze" class="nav-item" data-tab="analyze">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i><span>Scan Article</span>
+                </a>
+                <a href="#history" class="nav-item" data-tab="history">
+                    <i class="fa-solid fa-clock-rotate-left"></i><span>Scan History</span>
+                </a>
+                <a href="#settings" class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-gears"></i><span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="api-status">
+                    <span class="status-indicator offline" id="api-indicator"></span>
+                    <span id="api-status-text">AI Fact-Check Disabled</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header bar -->
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p id="page-subtitle">Real-time media integrity metrics</p>
+                </div>
+                <div class="user-profile">
+                    <span class="badge-role">Fact Checker</span>
+                </div>
+            </header>
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content active">
+                <!-- Summary Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card bg-grad-purple">
+                        <div class="card-icon"><i class="fa-solid fa-server"></i></div>
+                        <div class="card-info">
+                            <h3>Total Articles Scanned</h3>
+                            <h2 id="metric-total-scans">0</h2>
+                            <p>All-time history</p>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-grad-blue">
+                        <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="card-info">
+                            <h3>Credibility Rate</h3>
+                            <h2 id="metric-reliability">0%</h2>
+                            <p>Reliable articles ratio</p>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-grad-orange">
+                        <div class="card-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                        <div class="card-info">
+                            <h3>Average Clickbait</h3>
+                            <h2 id="metric-clickbait">0%</h2>
+                            <p>Sensationalism score</p>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-grad-red">
+                        <div class="card-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                        <div class="card-info">
+                            <h3>Disinformation Flagged</h3>
+                            <h2 id="metric-fake-count">0</h2>
+                            <p>Fake or misleading posts</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Scan Activity Timeline</h3>
+                            <p>Total volume and average trust scores</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="timeline-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card small-chart">
+                        <div class="chart-header">
+                            <h3>Credibility Distribution</h3>
+                            <p>Verdict shares among logged scans</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="distribution-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: SCAN ARTICLE -->
+            <section id="tab-analyze" class="tab-content">
+                <div class="scan-container">
+                    <div class="scan-tabs">
+                        <button class="scan-tab-btn active" data-scan-mode="url">
+                            <i class="fa-solid fa-link"></i>URL Scanner
+                        </button>
+                        <button class="scan-tab-btn" data-scan-mode="text">
+                            <i class="fa-solid fa-paragraph"></i>Full Text Analyser
+                        </button>
+                    </div>
+
+                    <!-- URL Scan Form -->
+                    <div id="scan-form-url" class="scan-panel active">
+                        <div class="input-group">
+                            <label for="input-url">News Article URL</label>
+                            <div class="url-input-wrapper">
+                                <i class="fa-solid fa-globe"></i>
+                                <input type="url" id="input-url" placeholder="https://example-news-website.com/article-path" required>
+                            </div>
+                            <p class="input-help">Luffy AI will scrape the page, extract text, and run the stylistic ML and Gemini factual verification models.</p>
+                        </div>
+                        <button id="btn-scan-url" class="btn btn-primary btn-glow">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>Scan Web Article
+                        </button>
+                    </div>
+
+                    <!-- Text Scan Form -->
+                    <div id="scan-form-text" class="scan-panel">
+                        <div class="input-group">
+                            <label for="input-title">Headline / Title (Optional)</label>
+                            <input type="text" id="input-title" placeholder="Enter the headline of the article...">
+                        </div>
+                        <div class="input-group">
+                            <label for="input-text">Article Content</label>
+                            <textarea id="input-text" rows="10" placeholder="Paste the full body text of the article here (minimum 100 characters)..." required></textarea>
+                        </div>
+                        <button id="btn-scan-text" class="btn btn-primary btn-glow">
+                            <i class="fa-solid fa-brain"></i>Analyse Custom Text
+                        </button>
+                    </div>
+
+                    <!-- Loader (Hidden initially) -->
+                    <div id="scan-loader" class="loader-overlay hidden">
+                        <div class="loader-content">
+                            <div class="scanning-circle">
+                                <div class="scanning-beam"></div>
+                            </div>
+                            <h3 id="loader-status">Initializing Analyzer...</h3>
+                            <p>Evaluating stylistic structure and fact checking claims.</p>
+                            <div class="loader-bar-bg">
+                                <div class="loader-bar-fill" id="loader-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scan Results (Hidden initially) -->
+                    <div id="scan-results" class="results-container hidden">
+                        <div class="results-header-row">
+                            <button id="btn-back-to-scan" class="btn-text">
+                                <i class="fa-solid fa-arrow-left"></i>Scan Another Article
+                            </button>
+                            <span class="source-tag" id="result-source-url">Source: Custom Paste</span>
+                        </div>
+
+                        <div class="results-summary-grid">
+                            <!-- Circular score dial -->
+                            <div class="result-score-card">
+                                <h3>Trust Score</h3>
+                                <div class="circular-progress-wrapper">
+                                    <svg class="progress-svg" viewBox="0 0 100 100">
+                                        <circle class="progress-bg" cx="50" cy="50" r="40"></circle>
+                                        <circle class="progress-fill" id="score-ring" cx="50" cy="50" r="40"></circle>
+                                    </svg>
+                                    <div class="progress-score-text">
+                                        <span id="result-trust-score">0</span>
+                                        <span class="percentage">%</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-badge" id="result-verdict">Reliable</div>
+                            </div>
+
+                            <!-- Verdict details -->
+                            <div class="result-details-card">
+                                <h3 id="result-title">Article Headline</h3>
+                                <div class="scores-row">
+                                    <div class="score-pill">
+                                        <span class="score-pill-val" id="result-ml-score">0%</span>
+                                        <span class="score-pill-lbl">Linguistic Credibility</span>
+                                    </div>
+                                    <div class="score-pill">
+                                        <span class="score-pill-val" id="result-llm-score">0%</span>
+                                        <span class="score-pill-lbl">Factual Consistency</span>
+                                    </div>
+                                    <div class="score-pill">
+                                        <span class="score-pill-val" id="result-clickbait-score">0%</span>
+                                        <span class="score-pill-lbl">Clickbait Level</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-narrative">
+                                    <h4>AI Analysis Narrative</h4>
+                                    <p id="result-explanation">...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Findings and Claims columns -->
+                        <div class="results-detailed-grid">
+                            <div class="details-card-block">
+                                <h3><i class="fa-solid fa-list-check text-purple"></i>Key Findings</h3>
+                                <ul class="findings-list" id="result-findings">
+                                    <!-- Populated dynamically -->
+                                </ul>
+                            </div>
+                            <div class="details-card-block">
+                                <h3><i class="fa-solid fa-clipboard-question text-blue"></i>Claim Verification</h3>
+                                <div class="claims-list" id="result-claims">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: SCAN HISTORY -->
+            <section id="tab-history" class="tab-content">
+                <div class="history-card">
+                    <div class="history-controls">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="history-search" placeholder="Search saved articles...">
+                        </div>
+                        <div class="filter-box">
+                            <select id="history-filter">
+                                <option value="all">All Verdicts</option>
+                                <option value="Reliable">Reliable</option>
+                                <option value="Mostly Reliable">Mostly Reliable</option>
+                                <option value="Plausible">Plausible</option>
+                                <option value="Misleading">Misleading</option>
+                                <option value="Fake">Fake</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Article Title</th>
+                                    <th>Bias</th>
+                                    <th>Score</th>
+                                    <th>Verdict</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="history-empty-state" class="empty-state hidden">
+                        <i class="fa-solid fa-database"></i>
+                        <p>No scans found matching your search. Scan an article to create your log database.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: SETTINGS -->
+            <section id="tab-settings" class="tab-content">
+                <div class="settings-grid">
+                    <!-- Setup Form (Shown only when no key is configured) -->
+                    <div id="settings-setup-form" class="settings-grid-sub">
+                        <div class="settings-card">
+                            <h3><i class="fa-solid fa-key text-purple"></i>Gemini AI Key Setup</h3>
+                            <p class="settings-desc">To unlock real-time deep semantic fact checking and claim verification, enter your Google Gemini API Key. Your key is stored securely in your local database.</p>
+                            
+                            <div class="input-group">
+                                <label for="setting-gemini-key">Gemini API Key</label>
+                                <div class="password-input-wrapper">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <input type="password" id="setting-gemini-key" placeholder="Enter your AIzaSy... Gemini API Key">
+                                    <button type="button" id="btn-toggle-key-visibility" class="btn-icon">
+                                        <i class="fa-solid fa-eye" id="key-visibility-icon"></i>
+                                    </button>
+                                </div>
+                                <span id="key-status-badge" class="key-status-badge unconfigured">Not Configured</span>
+                            </div>
+                            
+                            <button id="btn-save-settings" class="btn btn-primary btn-glow">
+                                <i class="fa-solid fa-save"></i>Save API Key
+                            </button>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="fa-solid fa-circle-info text-blue"></i>How to get a free API Key?</h3>
+                            <ol class="setup-guide-list">
+                                <li>Go to the official <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a> website.</li>
+                                <li>Sign in using your standard Google Account.</li>
+                                <li>Click the blue <strong>"Get API Key"</strong> button in the top left workspace panel.</li>
+                                <li>Click <strong>"Create API Key"</strong> and copy it into the settings panel here.</li>
+                                <li>Save, and your Luffy AI will automatically activate deep reasoning logic!</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Active Status Card (Shown when key is configured) -->
+                    <div id="settings-active-status" class="settings-card hidden" style="grid-column: 1 / -1; max-width: 500px; margin: 0 auto; text-align: center;">
+                        <div class="card-icon" style="margin: 0 auto 16px; width: 50px; height: 50px;"><i class="fa-solid fa-circle-check" style="font-size: 1.5rem;"></i></div>
+                        <h3>Gemini AI Fact-Check Active</h3>
+                        <p class="settings-desc" style="margin-bottom: 16px;">Luffy AI is successfully connected using your stored API key. Factual claim checking, media bias, and clickbait analyses are fully active.</p>
+                        <button id="btn-reset-key" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Change API Key
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Details View Modal (Hidden initially) -->
+    <div id="details-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Scan Log Details</h3>
+                <button id="btn-close-modal" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modal-content-body">
+                <!-- Dynamically filled result layout -->
+            </div>
+        </div>
+    </div>
+    <!-- Luffy AI Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -39,6 +39,15 @@ app.add_middleware(
 )
 
 # Initialize DB on startup
+@app.middleware("http")
+async def log_requests(request, call_next):
+    if "analyze/image" in request.url.path:
+        print("--- DIAGNOSTIC REQUEST LOG ---")
+        print("Path:", request.url.path)
+        print("Headers:", dict(request.headers))
+    response = await call_next(request)
+    return response
+
 @app.on_event("startup")
 def on_startup():
     init_db()

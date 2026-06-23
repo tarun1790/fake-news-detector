@@ -38,6 +38,9 @@
                 <a href="#analyze" class="nav-item" data-tab="analyze">
                     <i class="fa-solid fa-magnifying-glass-chart"></i><span>Scan Article</span>
                 </a>
+                <a href="#analyze-image" class="nav-item" data-tab="analyze-image">
+                    <i class="fa-solid fa-image"></i><span>Verify Image</span>
+                </a>
                 <a href="#history" class="nav-item" data-tab="history">
                     <i class="fa-solid fa-clock-rotate-left"></i><span>Scan History</span>
                 </a>
@@ -244,6 +247,136 @@
                             <div class="details-card-block">
                                 <h3><i class="fa-solid fa-clipboard-question text-blue"></i>Claim Verification</h3>
                                 <div class="claims-list" id="result-claims">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: VERIFY IMAGE -->
+            <section id="tab-analyze-image" class="tab-content">
+                <div class="image-scan-container">
+                    <!-- Dropzone -->
+                    <div id="image-dropzone" class="image-dropzone">
+                        <div class="dropzone-content">
+                            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                            <h3>Upload Image to Verify</h3>
+                            <p class="dropzone-sub">Drag & drop your image or click to browse</p>
+                            <p class="dropzone-formats">Supports JPG, PNG, WEBP (Max 15MB)</p>
+                            <input type="file" id="image-file-input" accept="image/*" class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Loader (Hidden initially) -->
+                    <div id="image-scan-loader" class="loader-overlay hidden">
+                        <div class="loader-content">
+                            <div class="scanning-circle">
+                                <div class="scanning-beam"></div>
+                            </div>
+                            <h3>Analyzing Image Forensics...</h3>
+                            <p>Running Error Level Analysis (ELA), Fourier spectrum noise scans, and EXIF integrity checks.</p>
+                            <div class="loader-bar-bg">
+                                <div class="loader-bar-fill" id="image-loader-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Scan Results (Hidden initially) -->
+                    <div id="image-scan-results" class="results-container hidden">
+                        <div class="results-header-row">
+                            <button id="btn-back-to-image-scan" class="btn-text">
+                                <i class="fa-solid fa-arrow-left"></i>Verify Another Image
+                            </button>
+                            <span class="source-tag" id="image-result-filename">image.jpg</span>
+                        </div>
+
+                        <div class="results-summary-grid">
+                            <!-- Circular score dial -->
+                            <div class="result-score-card">
+                                <h3>Authenticity Score</h3>
+                                <div class="circular-progress-wrapper">
+                                    <svg class="progress-svg" viewBox="0 0 100 100">
+                                        <circle class="progress-bg" cx="50" cy="50" r="40"></circle>
+                                        <circle class="progress-fill" id="image-score-ring" cx="50" cy="50" r="40"></circle>
+                                    </svg>
+                                    <div class="progress-score-text">
+                                        <span id="image-trust-score">0</span>
+                                        <span class="percentage">%</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-badge" id="image-verdict">Authentic</div>
+                            </div>
+
+                            <!-- Verdict details -->
+                            <div class="result-details-card">
+                                <h3>Classification Analysis</h3>
+                                <div class="probabilities-container">
+                                    <div class="prob-row">
+                                        <span class="prob-label">Authentic</span>
+                                        <div class="prob-bar-wrapper">
+                                            <div class="prob-bar-fill bg-success" id="prob-bar-authentic" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="prob-val" id="prob-val-authentic">0%</span>
+                                    </div>
+                                    <div class="prob-row">
+                                        <span class="prob-label">Deepfake</span>
+                                        <div class="prob-bar-wrapper">
+                                            <div class="prob-bar-fill bg-danger" id="prob-bar-deepfake" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="prob-val" id="prob-val-deepfake">0%</span>
+                                    </div>
+                                    <div class="prob-row">
+                                        <span class="prob-label">AI-Generated</span>
+                                        <div class="prob-bar-wrapper">
+                                            <div class="prob-bar-fill bg-info" id="prob-bar-aigen" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="prob-val" id="prob-val-aigen">0%</span>
+                                    </div>
+                                    <div class="prob-row">
+                                        <span class="prob-label">Morphed/Edited</span>
+                                        <div class="prob-bar-wrapper">
+                                            <div class="prob-bar-fill bg-warning" id="prob-bar-morphed" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="prob-val" id="prob-val-morphed">0%</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-narrative" style="margin-top: 16px;">
+                                    <h4>Dataset & Training Integrity</h4>
+                                    <p class="dataset-info-text">Forensic model trained across 10 benchmark datasets representing real and altered media: <strong>FFHQ, LFW, Celeb-DF, FaceForensics++, DFDC, WildDeepfake, CIFAKE, Artifact, GenImage, Auto-GAN.</strong></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comparative Preview and Forensic diagnostics -->
+                        <div class="results-detailed-grid">
+                            <!-- Visual forensis comparison -->
+                            <div class="details-card-block">
+                                <h3><i class="fa-solid fa-eye text-purple"></i>Forensic Heatmap Comparison</h3>
+                                <div class="visual-comparison-wrapper">
+                                    <div class="visual-pane">
+                                        <h4>Original Preview</h4>
+                                        <div class="img-preview-box">
+                                            <img id="img-orig-preview" src="" alt="Original Image">
+                                        </div>
+                                    </div>
+                                    <div class="visual-pane">
+                                        <h4>Error Level Analysis (ELA)</h4>
+                                        <div class="img-preview-box ela-box">
+                                            <img id="img-ela-preview" src="" alt="ELA Heatmap">
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="forensic-help-text" style="font-size: 0.8rem; opacity: 0.6; margin-top: 12px; line-height: 1.4;">
+                                    * Error Level Analysis (ELA) saves the image at a known quality level (90%) and analyzes local pixel variations. Bright regions in the ELA map indicate higher compression errors, highlighting manipulated/morphed sections.
+                                </p>
+                            </div>
+
+                            <!-- Diagnostic logs -->
+                            <div class="details-card-block">
+                                <h3><i class="fa-solid fa-list-check text-blue"></i>Forensic Diagnostics</h3>
+                                <div class="forensic-logs" id="image-forensic-logs">
                                     <!-- Populated dynamically -->
                                 </div>
                             </div>

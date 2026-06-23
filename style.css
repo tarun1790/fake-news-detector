@@ -1331,3 +1331,243 @@ body {
     40% { transform: translateY(-8px); }
     60% { transform: translateY(-4px); }
 }
+
+/* Image Forensic Tab Styling */
+.image-scan-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.image-dropzone {
+    width: 100%;
+    min-height: 350px;
+    border: 2px dashed var(--border-glass);
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.01);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.image-dropzone:hover, .image-dropzone.dragover {
+    border-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.03);
+    box-shadow: var(--shadow-glow-purple);
+}
+
+.dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+}
+
+.dropzone-icon {
+    font-size: 3.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    transition: var(--transition-smooth);
+}
+
+.image-dropzone:hover .dropzone-icon, .image-dropzone.dragover .dropzone-icon {
+    color: #ffffff;
+    transform: translateY(-5px);
+}
+
+.dropzone-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.dropzone-sub {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+.dropzone-formats {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Probabilities Progress Bars */
+.probabilities-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.prob-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.prob-label {
+    width: 110px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.prob-bar-wrapper {
+    flex-grow: 1;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.prob-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prob-val {
+    width: 45px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Class Bar Colors */
+.bg-success {
+    background-color: var(--clr-green);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.bg-danger {
+    background-color: var(--clr-red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.bg-info {
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.bg-warning {
+    background-color: var(--clr-orange);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+/* Visual Comparison */
+.visual-comparison-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+    .visual-comparison-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+.visual-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.visual-pane h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.img-preview-box {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #050505;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.img-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.ela-box {
+    background-color: #000000;
+    border: 1px solid #333333;
+}
+
+/* Forensic Diagnostic Logs */
+.forensic-logs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.forensic-log-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    transition: var(--transition-smooth);
+}
+
+.forensic-log-item:hover {
+    border-color: var(--border-hover);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.forensic-log-icon {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: flex-start;
+    margin-top: 2px;
+}
+
+.forensic-log-icon.status-success {
+    color: var(--clr-green);
+}
+
+.forensic-log-icon.status-warning {
+    color: var(--clr-orange);
+}
+
+.forensic-log-icon.status-danger {
+    color: var(--clr-red);
+}
+
+.forensic-log-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.forensic-log-body h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.forensic-log-body p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}

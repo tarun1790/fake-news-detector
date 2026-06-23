@@ -1,8 +1,12 @@
 import os
 import requests
+import io
+import base64
+import numpy as np
+from PIL import Image, ImageChops, ImageEnhance
 from typing import List
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +15,7 @@ from sqlalchemy import func
 from html.parser import HTMLParser
 
 from .database import init_db, get_db, ScanResult, Setting
+from .ml_model import image_predictor
 from .schemas import (
     TextAnalysisRequest,
     URLAnalysisRequest,
@@ -247,6 +252,233 @@ def update_settings(req: SettingsUpdate, db: Session = Depends(get_db)):
         db.add(setting)
     db.commit()
     return {"detail": "Gemini API Key updated successfully."}
+
+@app.post("/api/analyze/image")
+async def analyze_image(file: UploadFile = File(...)):
+    """Analyze an uploaded image for forensics and deepfakes."""
+    try:
+        # Read file bytes
+        file_bytes = await file.read()
+        
+        # Determine if metadata has editing software signatures
+        has_editing_software = 0
+        keywords = [b'photoshop', b'gimp', b'adobe', b'canva', b'corel', b'paint.net', b'fotor', b'pixlr']
+        for kw in keywords:
+            if kw in file_bytes.lower():
+                has_editing_software = 1
+                break
+        
+        # Load image with Pillow
+        try:
+            image = Image.open(io.BytesIO(file_bytes))
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Uploaded file is not a valid image format."
+            )
+        
+        # Make sure it's RGB
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+            
+        # 1. Check EXIF existence
+        has_exif = 0
+        try:
+            exif = image.getexif()
+            if exif and len(exif) > 0:
+                has_exif = 1
+        except Exception:
+            pass
+            
+        # 2. Perform ELA (Error Level Analysis)
+        # Save at 90% quality and reload
+        temp_io = io.BytesIO()
+        image.save(temp_io, format='JPEG', quality=90)
+        temp_io.seek(0)
+        temp_img = Image.open(temp_io)
+        
+        # Get difference
+        diff = ImageChops.difference(image, temp_img)
+        diff_arr = np.array(diff)
+        
+        ela_mean = float(np.mean(diff_arr))
+        ela_std = float(np.std(diff_arr))
+        ela_max = float(np.max(diff_arr))
+        
+        # Enhance difference for visualization (scale contrast to max brightness)
+        extrema = diff.getextrema()
+        max_diff = 0
+        for ext in extrema:
+            if isinstance(ext, tuple):
+                max_diff = max(max_diff, max(ext))
+            else:
+                max_diff = max(max_diff, ext)
+                
+        scale = 255.0 / max(1.0, max_diff)
+        enhanced_diff = ImageEnhance.Brightness(diff).enhance(scale)
+        
+        # Convert enhanced diff to base64
+        ela_io = io.BytesIO()
+        enhanced_diff.save(ela_io, format='JPEG')
+        ela_io.seek(0)
+        ela_base64 = base64.b64encode(ela_io.read()).decode('utf-8')
+        
+        # 3. FFT high frequency noise
+        fft_high_freq_mean = 0.0
+        try:
+            gray_img = image.convert('L')
+            img_arr = np.array(gray_img)
+            rows, cols = img_arr.shape
+            if rows > 4 and cols > 4:
+                f_transform = np.fft.fft2(img_arr)
+                f_shift = np.fft.fftshift(f_transform)
+                magnitude_spectrum = np.abs(f_shift)
+                # Normalize magnitude
+                mag_min, mag_max = magnitude_spectrum.min(), magnitude_spectrum.max()
+                if mag_max > mag_min:
+                    norm_mag = (magnitude_spectrum - mag_min) / (mag_max - mag_min)
+                else:
+                    norm_mag = magnitude_spectrum
+                    
+                crow, ccol = rows // 2 , cols // 2
+                # Mask out center (low frequencies)
+                mask = np.ones((rows, cols))
+                r_center = max(2, min(rows, cols) // 8)
+                y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
+                mask_center = x*x + y*y <= r_center*r_center
+                mask[mask_center] = 0
+                
+                fft_high_freq_mean = float(np.mean(norm_mag[mask == 1]))
+        except Exception as e:
+            print("FFT calculation error:", e)
+            
+        # 4. Color space stats
+        color_std_y = 50.0
+        color_std_cb = 15.0
+        color_std_cr = 15.0
+        try:
+            ycbcr = image.convert('YCbCr')
+            y_arr, cb_arr, cr_arr = ycbcr.split()
+            color_std_y = float(np.std(np.array(y_arr)))
+            color_std_cb = float(np.std(np.array(cb_arr)))
+            color_std_cr = float(np.std(np.array(cr_arr)))
+        except Exception as e:
+            print("Color stats calculation error:", e)
+            
+        # Compile features dict
+        features = {
+            "ela_mean": ela_mean,
+            "ela_std": ela_std,
+            "ela_max": ela_max,
+            "has_exif": float(has_exif),
+            "has_editing_software": float(has_editing_software),
+            "fft_high_freq_mean": fft_high_freq_mean,
+            "color_std_y": color_std_y,
+            "color_std_cb": color_std_cb,
+            "color_std_cr": color_std_cr
+        }
+        
+        # Predict using Image Predictor
+        prediction = image_predictor.predict(features)
+        
+        # Compile detailed forensic messages
+        forensic_details = []
+        
+        # ELA check
+        if ela_max > 80.0:
+            forensic_details.append({
+                "metric": "Error Level Analysis (ELA)",
+                "status": "danger",
+                "desc": f"Critical compression anomalies detected (Max diff: {ela_max:.1f}). High-contrast ELA suggests local manipulation (splicing or brush edits) along boundaries."
+            })
+        elif ela_mean > 5.0:
+            forensic_details.append({
+                "metric": "Error Level Analysis (ELA)",
+                "status": "warning",
+                "desc": f"Elevated compression variance detected (Mean diff: {ela_mean:.2f}). Pixel blocks show abnormal resaving signatures typical of composite images."
+            })
+        else:
+            forensic_details.append({
+                "metric": "Error Level Analysis (ELA)",
+                "status": "success",
+                "desc": f"Normal uniform error level (Mean diff: {ela_mean:.2f}). No local compression boundaries or pixel splicing artifacts detected."
+            })
+            
+        # FFT Check
+        if fft_high_freq_mean > 0.4:
+            forensic_details.append({
+                "metric": "Fourier Transform Noise Pattern",
+                "status": "danger",
+                "desc": f"Strong high-frequency structural noise detected (FFT index: {fft_high_freq_mean:.3f}). Indicates synthetic GAN/diffusion checkerboard grids."
+            })
+        elif fft_high_freq_mean > 0.15:
+            forensic_details.append({
+                "metric": "Fourier Transform Noise Pattern",
+                "status": "warning",
+                "desc": f"Anomalous high-frequency noise detected (FFT index: {fft_high_freq_mean:.3f}). Subtle digital artifacts present, suggesting face-swapping or neural generation blend lines."
+            })
+        else:
+            forensic_details.append({
+                "metric": "Fourier Transform Noise Pattern",
+                "status": "success",
+                "desc": f"Natural noise distribution (FFT index: {fft_high_freq_mean:.3f}). No neural network pattern periodic artifacts found."
+            })
+            
+        # Metadata / EXIF Check
+        if has_editing_software == 1:
+            forensic_details.append({
+                "metric": "Image Metadata Analysis",
+                "status": "danger",
+                "desc": "Active digital editing software signature (Photoshop/GIMP/Adobe/Canva) found embedded in the file headers."
+            })
+        elif has_exif == 0:
+            forensic_details.append({
+                "metric": "Camera EXIF Metadata",
+                "status": "warning",
+                "desc": "EXIF metadata is entirely missing. This is common for online/social media downloads or stripped images, but prevents camera hardware verification."
+            })
+        else:
+            forensic_details.append({
+                "metric": "Camera EXIF Metadata",
+                "status": "success",
+                "desc": "Valid camera EXIF headers found. File contains native hardware capture metadata."
+            })
+            
+        # Color profile check
+        if color_std_cb < 7.0 or color_std_cr < 7.0:
+            forensic_details.append({
+                "metric": "Color Space Distribution",
+                "status": "warning",
+                "desc": f"Abnormal chrominance dispersion (Cb std: {color_std_cb:.1f}, Cr std: {color_std_cr:.1f}). Typical of synthetic generator color spaces."
+            })
+        else:
+            forensic_details.append({
+                "metric": "Color Space Distribution",
+                "status": "success",
+                "desc": f"Normal color distribution across standard YCbCr spaces (Cb std: {color_std_cb:.1f}, Cr std: {color_std_cr:.1f})."
+            })
+            
+        return {
+            "filename": file.filename,
+            "verdict": prediction["verdict"],
+            "authenticity_score": round(prediction["authenticity_score"], 1),
+            "probabilities": {
+                "Authentic": round(prediction["probabilities"][0], 1),
+                "Deepfake": round(prediction["probabilities"][1], 1),
+                "AI-Generated": round(prediction["probabilities"][2], 1),
+                "Morphed/Edited": round(prediction["probabilities"][3], 1)
+            },
+            "ela_image": f"data:image/jpeg;base64,{ela_base64}",
+            "features": features,
+            "forensic_details": forensic_details
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Image forensic analysis failed: {str(e)}"
+        )
 
 # ----------------- Serves Web Dashboard -----------------
 

@@ -43,6 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const scanResults = document.getElementById('scan-results');
     const btnBackToScan = document.getElementById('btn-back-to-scan');
     
+    // Image forensic elements
+    const imageDropzone = document.getElementById('image-dropzone');
+    const imageFileInput = document.getElementById('image-file-input');
+    const imageScanLoader = document.getElementById('image-scan-loader');
+    const imageLoaderProgress = document.getElementById('image-loader-progress');
+    const imageScanResults = document.getElementById('image-scan-results');
+    const btnBackToImageScan = document.getElementById('btn-back-to-image-scan');
+    const imageResultFilename = document.getElementById('image-result-filename');
+    
+    const imageTrustScore = document.getElementById('image-trust-score');
+    const imageScoreRing = document.getElementById('image-score-ring');
+    const imageVerdict = document.getElementById('image-verdict');
+    
+    const probBarAuthentic = document.getElementById('prob-bar-authentic');
+    const probValAuthentic = document.getElementById('prob-val-authentic');
+    const probBarDeepfake = document.getElementById('prob-bar-deepfake');
+    const probValDeepfake = document.getElementById('prob-val-deepfake');
+    const probBarAigen = document.getElementById('prob-bar-aigen');
+    const probValAigen = document.getElementById('prob-val-aigen');
+    const probBarMorphed = document.getElementById('prob-bar-morphed');
+    const probValMorphed = document.getElementById('prob-val-morphed');
+    
+    const imgOrigPreview = document.getElementById('img-orig-preview');
+    const imgElaPreview = document.getElementById('img-ela-preview');
+    const imageForensicLogs = document.getElementById('image-forensic-logs');
+    
     // History log elements
     const historySearch = document.getElementById('history-search');
     const historyFilter = document.getElementById('history-filter');
@@ -150,6 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tabId === 'analyze') {
             pageTitle.textContent = 'Scan Article';
             pageSubtitle.textContent = 'Linguistic stylistic audit and factual verification';
+        } else if (tabId === 'analyze-image') {
+            pageTitle.textContent = 'Verify Image';
+            pageSubtitle.textContent = 'Advanced forensic error-level and Fourier domain checks';
         } else if (tabId === 'history') {
             pageTitle.textContent = 'Scan History';
             pageSubtitle.textContent = 'Chronological log of verified claims';
@@ -731,6 +760,182 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsModal.addEventListener('click', (e) => {
         if (e.target === detailsModal) detailsModal.classList.add('hidden');
     });
+
+    // --- IMAGE FORENSIC SCANNER WIRING ---
+    if (imageDropzone && imageFileInput) {
+        imageDropzone.addEventListener('click', () => {
+            imageFileInput.click();
+        });
+        
+        imageDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropzone.classList.add('dragover');
+        });
+        
+        imageDropzone.addEventListener('dragleave', () => {
+            imageDropzone.classList.remove('dragover');
+        });
+        
+        imageDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropzone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageFile(files[0]);
+            }
+        });
+        
+        imageFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+    }
+
+    if (btnBackToImageScan) {
+        btnBackToImageScan.addEventListener('click', () => {
+            imageScanResults.classList.add('hidden');
+            imageDropzone.classList.remove('hidden');
+            if (imageFileInput) {
+                imageFileInput.value = '';
+            }
+        });
+    }
+
+    async function handleImageFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            return;
+        }
+        
+        if (imageResultFilename) {
+            imageResultFilename.textContent = file.name;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (imgOrigPreview) {
+                imgOrigPreview.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
+        
+        imageDropzone.classList.add('hidden');
+        imageScanLoader.classList.remove('hidden');
+        imageScanResults.classList.add('hidden');
+        
+        if (imageLoaderProgress) {
+            imageLoaderProgress.style.width = '0%';
+        }
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 85) progress = 85;
+            if (imageLoaderProgress) {
+                imageLoaderProgress.style.width = `${progress}%`;
+            }
+        }, 150);
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await apiFetch('/api/analyze/image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            clearInterval(progressInterval);
+            if (imageLoaderProgress) {
+                imageLoaderProgress.style.width = '100%';
+            }
+            
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Forensic analysis request failed');
+            }
+            
+            const data = await response.json();
+            
+            setTimeout(() => {
+                imageScanLoader.classList.add('hidden');
+                imageScanResults.classList.remove('hidden');
+                renderImageResults(data);
+            }, 300);
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            imageScanLoader.classList.add('hidden');
+            imageDropzone.classList.remove('hidden');
+            alert(`Analysis Error: ${error.message}`);
+        }
+    }
+
+    function renderImageResults(data) {
+        const score = data.authenticity_score;
+        imageTrustScore.textContent = Math.round(score);
+        
+        let color = '#ef4444';
+        let badgeClass = 'verdict-fake';
+        if (score >= 60) {
+            color = '#10b981';
+            badgeClass = 'verdict-reliable';
+        } else if (score >= 30) {
+            color = '#f59e0b';
+            badgeClass = 'verdict-misleading';
+        }
+        
+        imageScoreRing.style.stroke = color;
+        const circumference = 251.2;
+        const offset = circumference - (score / 100) * circumference;
+        imageScoreRing.style.strokeDashoffset = offset;
+        
+        imageVerdict.textContent = data.verdict;
+        imageVerdict.className = `verdict-badge ${badgeClass}`;
+        
+        const probs = data.probabilities;
+        
+        probBarAuthentic.style.width = `${probs['Authentic']}%`;
+        probValAuthentic.textContent = `${Math.round(probs['Authentic'])}%`;
+        
+        probBarDeepfake.style.width = `${probs['Deepfake']}%`;
+        probValDeepfake.textContent = `${Math.round(probs['Deepfake'])}%`;
+        
+        probBarAigen.style.width = `${probs['AI-Generated']}%`;
+        probValAigen.textContent = `${Math.round(probs['AI-Generated'])}%`;
+        
+        probBarMorphed.style.width = `${probs['Morphed/Edited']}%`;
+        probValMorphed.textContent = `${Math.round(probs['Morphed/Edited'])}%`;
+        
+        if (imgElaPreview) {
+            imgElaPreview.src = data.ela_image;
+        }
+        
+        if (imageForensicLogs) {
+            imageForensicLogs.innerHTML = data.forensic_details.map(detail => {
+                let iconClass = 'fa-solid fa-circle-check';
+                if (detail.status === 'warning') {
+                    iconClass = 'fa-solid fa-circle-exclamation';
+                } else if (detail.status === 'danger') {
+                    iconClass = 'fa-solid fa-triangle-exclamation';
+                }
+                
+                return `
+                    <div class="forensic-log-item">
+                        <div class="forensic-log-icon status-${detail.status}">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="forensic-log-body">
+                            <h4>${detail.metric}</h4>
+                            <p>${detail.desc}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
 
     // --- INITIALIZE ---
     checkSettingsStatus();

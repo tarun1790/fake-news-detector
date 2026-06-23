@@ -111,3 +111,109 @@ class MLModelPredictor:
 
 # Global predictor instance
 predictor = MLModelPredictor()
+
+class MLImagePredictor:
+    def __init__(self):
+        self.data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+        self.model_path = os.path.join(self.data_dir, "fake_image_model.joblib")
+        
+        self.model = None
+        self.load_model()
+
+    def load_model(self):
+        """Attempts to load the image forensic model from disk."""
+        if os.path.exists(self.model_path):
+            try:
+                self.model = joblib.load(self.model_path)
+                print("Forensic Image ML Model loaded successfully.")
+            except Exception as e:
+                print(f"Error loading saved Image ML model: {e}.")
+                self.model = None
+        else:
+            print("Forensic Image ML Model files not found. Fallback classification will be used.")
+
+    def predict(self, features: dict) -> dict:
+        """
+        Takes a dict of extracted image features and runs prediction.
+        Returns:
+        - verdict: str
+        - authenticity_score: float (0 - 100)
+        - probabilities: list of floats
+        """
+        if self.model is None:
+            self.load_model()
+            
+        feature_names = [
+            "ela_mean", "ela_std", "ela_max", "has_exif", 
+            "has_editing_software", "fft_high_freq_mean", 
+            "color_std_y", "color_std_cb", "color_std_cr"
+        ]
+        
+        # Prepare input vector
+        input_data = []
+        for name in feature_names:
+            input_data.append(features.get(name, 0.0))
+            
+        if self.model is not None:
+            try:
+                # predict_proba returns [prob_class_0, prob_class_1, prob_class_2, prob_class_3]
+                # Classes: 0: Authentic, 1: Deepfake, 2: AI-Generated, 3: Morphed/Edited
+                probs = self.model.predict_proba([input_data])[0]
+                
+                # Class mapping
+                class_names = ["Authentic", "Deepfake", "AI-Generated", "Morphed/Edited"]
+                max_idx = np.argmax(probs)
+                verdict = class_names[max_idx]
+                
+                # Authenticity score is the probability of class 0 (Authentic)
+                authenticity_score = float(probs[0] * 100)
+                
+                return {
+                    "verdict": verdict,
+                    "authenticity_score": max(0.0, min(100.0, authenticity_score)),
+                    "probabilities": [float(p * 100) for p in probs]
+                }
+            except Exception as e:
+                print(f"Error running Image ML model prediction: {e}.")
+                
+        # Fallback prediction based on simple heuristics
+        return self._heuristic_predict(features)
+
+    def _heuristic_predict(self, features: dict) -> dict:
+        ela_mean = features.get("ela_mean", 0.0)
+        ela_max = features.get("ela_max", 0.0)
+        has_exif = features.get("has_exif", 0.0)
+        has_software = features.get("has_editing_software", 0.0)
+        fft_noise = features.get("fft_high_freq_mean", 0.0)
+        
+        probs = [0.0, 0.0, 0.0, 0.0]
+        
+        if has_software > 0.5 or ela_max > 60.0:
+            # Morphed/Edited
+            probs[3] = 0.8
+            probs[0] = 0.2
+            verdict = "Morphed/Edited"
+        elif fft_noise > 0.35:
+            # AI-Generated
+            probs[2] = 0.85
+            probs[0] = 0.15
+            verdict = "AI-Generated"
+        elif ela_mean > 6.0:
+            # Deepfake
+            probs[1] = 0.8
+            probs[0] = 0.2
+            verdict = "Deepfake"
+        else:
+            # Authentic
+            probs[0] = 0.95
+            probs[3] = 0.05
+            verdict = "Authentic"
+            
+        return {
+            "verdict": verdict,
+            "authenticity_score": float(probs[0] * 100),
+            "probabilities": [float(p * 100) for p in probs]
+        }
+
+# Global image predictor instance
+image_predictor = MLImagePredictor()

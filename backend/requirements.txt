@@ -8,3 +8,5 @@ joblib
 requests
 datasets
 google-genai
+Pillow
+python-multipart

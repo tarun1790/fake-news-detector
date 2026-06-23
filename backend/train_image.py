@@ -152,7 +152,7 @@ def generate_dataset_features():
             "color_std_y": color_std_y,
             "color_std_cb": color_std_cb,
             "color_std_cr": color_std_cr,
-            "label": 0
+            "label": 3
         })
         
     return pd.DataFrame(rows)
@@ -173,7 +173,7 @@ def train_forensic_classifier():
     y_pred = model.predict(X_test.values)
     acc = accuracy_score(y_test, y_pred)
     print(f"Model Validation Accuracy: {acc * 100:.2f}%")
-    print(classification_report(y_test, y_pred, target_names=["Authentic", "Deepfake", "AI-Generated"]))
+    print(classification_report(y_test, y_pred, target_names=["Authentic", "Deepfake", "AI-Generated", "Morphed/Edited"]))
     
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(data_dir, exist_ok=True)

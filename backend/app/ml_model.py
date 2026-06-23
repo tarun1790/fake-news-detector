@@ -169,14 +169,19 @@ class MLImagePredictor:
                 # Rule A: Clean camera photos with hardware EXIF signatures
                 # If an image has valid camera EXIF headers, no editing software, and no extreme splicing ELA anomalies, it is Authentic!
                 if has_exif > 0.5 and has_software < 0.5 and ela_max < 55.0:
-                    probs = np.array([0.97, 0.02, 0.01])
+                    probs = np.array([0.96, 0.02, 0.01, 0.01])
+                    
+                # Rule B: Strict metadata software check or extreme splicing ELA discrepancy
+                # If editing software signature is found in headers, or extreme local compression difference occurs, it is Morphed/Edited
+                elif has_software > 0.5 or ela_max > 100.0:
+                    probs = np.array([0.05, 0.10, 0.05, 0.80])
                     
                 # Rule C: Extreme high frequency noise (periodic grid artifacts)
                 # If the high-frequency FFT energy ratio is extremely high, classify as AI-Generated
                 elif fft_noise > 0.75:
-                    probs = np.array([0.05, 0.15, 0.80])
+                    probs = np.array([0.05, 0.10, 0.80, 0.05])
                 
-                class_names = ["Authentic", "Deepfake", "AI-Generated"]
+                class_names = ["Authentic", "Deepfake", "AI-Generated", "Morphed/Edited"]
                 max_idx = np.argmax(probs)
                 verdict = class_names[max_idx]
                 authenticity_score = float(probs[0] * 100)
@@ -199,9 +204,14 @@ class MLImagePredictor:
         has_software = features.get("has_editing_software", 0.0)
         fft_noise = features.get("fft_high_freq_mean", 0.0)
         
-        probs = [0.0, 0.0, 0.0]
+        probs = [0.0, 0.0, 0.0, 0.0]
         
-        if fft_noise > 0.70:
+        if has_software > 0.5 or ela_max > 85.0:
+            # Morphed/Edited
+            probs[3] = 0.80
+            probs[0] = 0.20
+            verdict = "Morphed/Edited"
+        elif fft_noise > 0.70:
             # AI-Generated
             probs[2] = 0.85
             probs[0] = 0.15
@@ -212,9 +222,9 @@ class MLImagePredictor:
             probs[0] = 0.20
             verdict = "Deepfake"
         else:
-            # Authentic (covers standard and morphed/edited images)
+            # Authentic
             probs[0] = 0.95
-            probs[1] = 0.05
+            probs[3] = 0.05
             verdict = "Authentic"
             
         return {

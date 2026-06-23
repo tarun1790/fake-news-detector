@@ -39,6 +39,22 @@ def load_and_normalize_datasets():
     except Exception as e:
         print(f"-> Failed to load ErfanMoosaviMonazzah: {e}")
 
+    # ------------------ DATASET 3: mrm8488/fake-news ------------------
+    # Original mapping: 0 = Real, 1 = Fake (Matches target mapping, no inversion needed!)
+    # Target mapping: 0 = Real, 1 = Fake
+    print("Loading Dataset 3: mrm8488/fake-news...")
+    try:
+        ds3 = load_dataset("mrm8488/fake-news", split="train")
+        df3 = pd.DataFrame(ds3)
+        df3["label"] = df3["label"].astype(int)
+        if "title" not in df3.columns:
+            df3["title"] = ""
+        df3 = df3[["title", "text", "label"]]
+        print(f"-> Successfully loaded mrm8488/fake-news: {len(df3)} rows.")
+        dfs.append(df3)
+    except Exception as e:
+        print(f"-> Failed to load mrm8488/fake-news: {e}")
+
     # ------------------ FALLBACK BOOTSTRAP ------------------
     if len(dfs) == 0:
         print("All online datasets failed. Bootstrapping synthetic dataset...")

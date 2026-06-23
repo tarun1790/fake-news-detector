@@ -333,22 +333,15 @@ async def analyze_image(file: UploadFile = File(...)):
                 f_transform = np.fft.fft2(img_arr)
                 f_shift = np.fft.fftshift(f_transform)
                 magnitude_spectrum = np.abs(f_shift)
-                # Normalize magnitude
-                mag_min, mag_max = magnitude_spectrum.min(), magnitude_spectrum.max()
-                if mag_max > mag_min:
-                    norm_mag = (magnitude_spectrum - mag_min) / (mag_max - mag_min)
-                else:
-                    norm_mag = magnitude_spectrum
-                    
-                crow, ccol = rows // 2 , cols // 2
-                # Mask out center (low frequencies)
-                mask = np.ones((rows, cols))
-                r_center = max(2, min(rows, cols) // 8)
-                y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
-                mask_center = x*x + y*y <= r_center*r_center
-                mask[mask_center] = 0
-                
-                fft_high_freq_mean = float(np.mean(norm_mag[mask == 1]))
+                total_energy = np.sum(magnitude_spectrum)
+                if total_energy > 0:
+                    crow, ccol = rows // 2 , cols // 2
+                    mask = np.ones((rows, cols))
+                    r_center = max(2, min(rows, cols) // 8)
+                    y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
+                    mask_center = x*x + y*y <= r_center*r_center
+                    mask[mask_center] = 0
+                    fft_high_freq_mean = float(np.sum(magnitude_spectrum[mask == 1]) / total_energy)
         except Exception as e:
             print("FFT calculation error:", e)
             

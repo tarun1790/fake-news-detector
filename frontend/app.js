@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HELPER TO GET DYNAMIC BACKEND API URL ---
     function getApiUrl(endpoint) {
         const storedUrl = localStorage.getItem('luffy_backend_url');
-        const defaultBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? '' : 'https://luffy-forensics.loca.lt';
+        const defaultBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? '' : 'https://polite-panther-35.loca.lt';
         const base = storedUrl || defaultBase;
         const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         return `${cleanBase}${endpoint}`;
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Populate current backend URL
     if (settingBackendUrl) {
-        settingBackendUrl.value = localStorage.getItem('luffy_backend_url') || 'https://luffy-forensics.loca.lt';
+        settingBackendUrl.value = localStorage.getItem('luffy_backend_url') || 'https://polite-panther-35.loca.lt';
     }
 
     if (btnSaveBackendUrl && settingBackendUrl) {

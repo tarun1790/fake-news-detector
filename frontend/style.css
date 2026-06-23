@@ -1571,3 +1571,126 @@ body {
     color: var(--text-secondary);
     line-height: 1.4;
 }
+
+/* --- MOBILE RESPONSIVE MEDIA QUERY OVERRIDES --- */
+@media (max-width: 768px) {
+    /* Hide desktop sidebar */
+    .sidebar {
+        display: none !important;
+    }
+    
+    /* App layout adjust */
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .main-content {
+        padding: 16px !important;
+        padding-bottom: 90px !important; /* spacing for bottom nav bar */
+        height: auto;
+        overflow-y: visible;
+    }
+    
+    .top-bar {
+        padding: 12px 0 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    /* Mobile bottom navigation bar */
+    .mobile-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 64px;
+        background-color: rgba(0, 0, 0, 0.94);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border-glass);
+        z-index: 100;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 12px;
+    }
+    
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.65rem;
+        font-weight: 500;
+        flex-grow: 1;
+        height: 100%;
+        transition: var(--transition-smooth);
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.15rem;
+    }
+    
+    .mobile-nav-item.active {
+        color: #ffffff;
+    }
+    
+    /* Layout components stacking */
+    .metrics-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .results-summary-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .results-detailed-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    /* History table responsiveness */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .history-controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .search-box, .filter-box select {
+        width: 100% !important;
+    }
+    
+    /* Text sizes adjustments */
+    h1 {
+        font-size: 1.6rem !important;
+    }
+    
+    h2 {
+        font-size: 1.3rem !important;
+    }
+    
+    .logo-text {
+        font-size: 1.2rem !important;
+    }
+}

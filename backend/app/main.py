@@ -245,9 +245,11 @@ def get_stats(db: Session = Depends(get_db)):
 
 @app.get("/api/settings", response_model=SettingsResponse)
 def get_settings(db: Session = Depends(get_db)):
-    """Check if Gemini API Key is configured."""
+    """Check if Gemini API Key is configured (DB or environment variable)."""
     setting = db.query(Setting).filter(Setting.key == "gemini_api_key").first()
-    is_configured = bool(setting and setting.value)
+    db_configured = bool(setting and setting.value)
+    env_configured = bool(os.getenv("GEMINI_API_KEY", ""))
+    is_configured = db_configured or env_configured
     return SettingsResponse(gemini_api_key_configured=is_configured)
 
 @app.post("/api/settings")

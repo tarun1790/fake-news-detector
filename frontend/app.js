@@ -264,19 +264,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkSettingsStatus() {
+        const setupForm = document.getElementById('settings-setup-form');
+        const activeStatus = document.getElementById('settings-active-status');
+
         try {
             const res = await apiFetch('/api/settings');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            
-            const setupForm = document.getElementById('settings-setup-form');
-            const activeStatus = document.getElementById('settings-active-status');
 
             if (data.gemini_api_key_configured) {
                 keyStatusBadge.textContent = 'Configured & Active';
                 keyStatusBadge.className = 'key-status-badge configured';
                 apiIndicator.className = 'status-indicator online';
                 apiStatusText.textContent = 'AI Fact-Check Active';
-                
+
                 if (setupForm) setupForm.classList.add('hidden');
                 if (activeStatus) activeStatus.classList.remove('hidden');
             } else {
@@ -284,12 +285,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 keyStatusBadge.className = 'key-status-badge unconfigured';
                 apiIndicator.className = 'status-indicator offline';
                 apiStatusText.textContent = 'AI Fact-Check Disabled';
-                
+
                 if (setupForm) setupForm.classList.remove('hidden');
                 if (activeStatus) activeStatus.classList.add('hidden');
             }
         } catch (err) {
-            console.error('Error fetching settings status:', err);
+            // Backend is unreachable (tunnel down or server offline)
+            console.warn('Backend unreachable:', err);
+            if (keyStatusBadge) {
+                keyStatusBadge.textContent = 'Backend Offline';
+                keyStatusBadge.className = 'key-status-badge unconfigured';
+            }
+            if (apiIndicator) apiIndicator.className = 'status-indicator offline';
+            if (apiStatusText) apiStatusText.textContent = 'Backend Server Offline';
+
+            if (setupForm) setupForm.classList.remove('hidden');
+            if (activeStatus) activeStatus.classList.add('hidden');
         }
     }
 
@@ -441,8 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DASHBOARD DATA LOADING ---
     async function loadDashboardData() {
+        // Always sync AI status on dashboard load
+        checkSettingsStatus();
         try {
             const res = await apiFetch('/api/stats');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             
             // Set simple numeric stats

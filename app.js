@@ -62,8 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const probValDeepfake = document.getElementById('prob-val-deepfake');
     const probBarAigen = document.getElementById('prob-bar-aigen');
     const probValAigen = document.getElementById('prob-val-aigen');
-    const probBarMorphed = document.getElementById('prob-bar-morphed');
-    const probValMorphed = document.getElementById('prob-val-morphed');
     
     const imgOrigPreview = document.getElementById('img-orig-preview');
     const imgElaPreview = document.getElementById('img-ela-preview');
@@ -919,9 +917,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         probBarAigen.style.width = `${probs['AI-Generated']}%`;
         probValAigen.textContent = `${Math.round(probs['AI-Generated'])}%`;
-        
-        probBarMorphed.style.width = `${probs['Morphed/Edited']}%`;
-        probValMorphed.textContent = `${Math.round(probs['Morphed/Edited'])}%`;
         
         if (imgElaPreview) {
             imgElaPreview.src = data.ela_image;

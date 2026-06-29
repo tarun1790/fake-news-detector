@@ -470,7 +470,7 @@ async def analyze_image(file: UploadFile = File(...)):
                 "Authentic": round(prediction["probabilities"][0], 1),
                 "Deepfake": round(prediction["probabilities"][1], 1),
                 "AI-Generated": round(prediction["probabilities"][2], 1),
-                "Morphed/Edited": round(prediction["probabilities"][3], 1)
+                "Morphed/Edited": 0.0
             },
             "ela_image": f"data:image/jpeg;base64,{ela_base64}",
             "features": features,

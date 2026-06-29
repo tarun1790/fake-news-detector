@@ -12,7 +12,7 @@ def generate_dataset_features():
     Aligned with actual feature extraction logic.
     """
     np.random.seed(42)
-    n_samples_per_class = 2000 # 8000 total samples
+    n_samples_per_class = 20000 # 60000 total samples
     
     rows = []
     
@@ -125,40 +125,10 @@ def generate_dataset_features():
             "label": 2
         })
         
-    # Class 3: Morphed/Edited (Spliced image boundaries)
-    # Morphed images have extreme ELA spikes at splicing boundaries
-    for _ in range(n_samples_per_class):
-        has_exif = 1.0 if np.random.rand() < 0.10 else 0.0
-        has_software = 1.0 if np.random.rand() < 0.85 else 0.0
-        
-        # Massive ELA spikes at splicing boundaries
-        ela_mean = np.random.uniform(2.5, 10.0)
-        ela_std = np.random.uniform(1.5, 8.0)
-        ela_max = np.random.uniform(65.0, 255.0) 
-        
-        fft_noise = np.random.uniform(0.10, 0.58)
-        
-        color_std_y = np.random.uniform(10.0, 80.0)
-        color_std_cb = np.random.uniform(7.0, 32.0)
-        color_std_cr = np.random.uniform(7.0, 32.0)
-        
-        rows.append({
-            "ela_mean": ela_mean,
-            "ela_std": ela_std,
-            "ela_max": ela_max,
-            "has_exif": has_exif,
-            "has_editing_software": has_software,
-            "fft_high_freq_mean": fft_noise,
-            "color_std_y": color_std_y,
-            "color_std_cb": color_std_cb,
-            "color_std_cr": color_std_cr,
-            "label": 3
-        })
-        
     return pd.DataFrame(rows)
 
 def train_forensic_classifier():
-    print("Generating comprehensive dataset representing 12 image forensic datasets...")
+    print("Generating comprehensive dataset representing 10 image forensic datasets...")
     df = generate_dataset_features()
     
     X = df.drop(columns=["label"])
@@ -167,13 +137,13 @@ def train_forensic_classifier():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     
     print("Training Random Forest Classifier on numpy array features...")
-    model = RandomForestClassifier(n_estimators=100, max_depth=12, random_state=42)
+    model = RandomForestClassifier(n_estimators=250, max_depth=16, random_state=42)
     model.fit(X_train.values, y_train)
     
     y_pred = model.predict(X_test.values)
     acc = accuracy_score(y_test, y_pred)
     print(f"Model Validation Accuracy: {acc * 100:.2f}%")
-    print(classification_report(y_test, y_pred, target_names=["Authentic", "Deepfake", "AI-Generated", "Morphed/Edited"]))
+    print(classification_report(y_test, y_pred, target_names=["Authentic", "Deepfake", "AI-Generated"]))
     
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(data_dir, exist_ok=True)

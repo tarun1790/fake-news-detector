@@ -1640,7 +1640,8 @@ body {
     }
     
     .mobile-nav-item.active {
-        color: #ffffff;
+        color: #ffffff !important;
+        background: transparent !important;
     }
 
     /* Scan tabs responsive adjustments */

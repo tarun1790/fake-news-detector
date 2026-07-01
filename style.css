@@ -1582,20 +1582,22 @@ body {
     /* App layout adjust */
     .app-container {
         flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
     }
     
     .main-content {
-        padding: 16px !important;
-        padding-bottom: 90px !important; /* spacing for bottom nav bar */
-        height: auto;
-        overflow-y: visible;
+        padding: 12px 12px 90px 12px !important; /* spacing for bottom nav bar and safe areas */
+        height: calc(100vh - 64px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .top-bar {
-        padding: 12px 0 20px;
+        padding: 8px 0 16px;
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
+        gap: 6px;
     }
     
     /* Mobile bottom navigation bar */
@@ -1604,16 +1606,18 @@ body {
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100vw;
-        height: 64px;
-        background-color: rgba(0, 0, 0, 0.94);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid var(--border-glass);
+        width: 100%;
+        height: 68px;
+        background-color: rgba(6, 6, 6, 0.95);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
         z-index: 100;
         justify-content: space-around;
         align-items: center;
-        padding: 0 12px;
+        padding: 0 8px;
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: border-box;
     }
     
     .mobile-nav-item {
@@ -1632,37 +1636,76 @@ body {
     }
     
     .mobile-nav-item i {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
     }
     
     .mobile-nav-item.active {
         color: #ffffff;
     }
+
+    /* Scan tabs responsive adjustments */
+    .scan-tabs {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        gap: 6px;
+        margin-bottom: 20px;
+    }
+
+    .scan-tab-btn {
+        flex: 1;
+        font-size: 0.78rem !important;
+        padding: 10px 4px !important;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .scan-tab-btn i {
+        margin-right: 4px;
+        font-size: 0.85rem;
+    }
     
     /* Layout components stacking */
     .metrics-grid {
         grid-template-columns: 1fr !important;
-        gap: 12px !important;
+        gap: 10px !important;
+    }
+
+    .metric-card {
+        padding: 16px !important;
     }
     
     .charts-grid {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
+        gap: 14px !important;
+    }
+
+    .chart-card {
+        padding: 16px !important;
     }
     
     .results-summary-grid {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
+        gap: 14px !important;
+    }
+
+    .result-score-card, .result-details-card {
+        padding: 16px !important;
     }
     
     .results-detailed-grid {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
+        gap: 14px !important;
+    }
+
+    .details-card-block {
+        padding: 16px !important;
     }
     
     .settings-grid {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
+        gap: 14px !important;
     }
     
     /* History table responsiveness */
@@ -1670,27 +1713,86 @@ body {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        border: 1px solid var(--border-glass);
     }
     
     .history-controls {
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
+        align-items: stretch !important;
     }
     
-    .search-box, .filter-box select {
+    .search-box {
+        width: 100% !important;
+    }
+
+    .filter-box, .filter-box select {
         width: 100% !important;
     }
     
     /* Text sizes adjustments */
     h1 {
-        font-size: 1.6rem !important;
+        font-size: 1.4rem !important;
     }
     
     h2 {
-        font-size: 1.3rem !important;
+        font-size: 1.25rem !important;
+    }
+
+    h3 {
+        font-size: 1.05rem !important;
     }
     
     .logo-text {
-        font-size: 1.2rem !important;
+        font-size: 1.15rem !important;
+    }
+
+    .url-input-wrapper input {
+        padding: 12px 12px 12px 38px !important;
+        font-size: 0.85rem;
+    }
+
+    /* ELA comparison container adjustments */
+    .img-preview-box {
+        aspect-ratio: 16 / 10;
+        max-height: 200px;
+    }
+
+    /* Modal Sheet sliding up from bottom for mobile native feel */
+    #details-modal .modal-card {
+        width: 100% !important;
+        height: 85% !important;
+        max-height: 85% !important;
+        border-radius: 20px 20px 0 0 !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        margin: 0 !important;
+        animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        background: #0d0d0d !important;
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    }
+
+    #details-modal .modal-header {
+        padding: 16px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    #details-modal .modal-body {
+        padding: 16px !important;
+        height: calc(100% - 60px) !important;
+        overflow-y: auto;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
     }
 }

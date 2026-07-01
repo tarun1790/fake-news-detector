@@ -1639,9 +1639,19 @@ body {
         font-size: 1.1rem;
     }
     
+    .mobile-nav .nav-item,
+    .mobile-nav .nav-item.active,
+    .mobile-nav-item,
+    .mobile-nav-item.active {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+    }
+    
+    .mobile-nav .nav-item.active,
     .mobile-nav-item.active {
         color: #ffffff !important;
-        background: transparent !important;
     }
 
     /* Scan tabs responsive adjustments */

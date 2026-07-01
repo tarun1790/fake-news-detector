@@ -10,7 +10,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=1.0.4">
+    <link rel="stylesheet" href="style.css?v=1.0.5">
+    <style>
+        /* Inline mobile styles to bypass mobile browser caching issues */
+        @media (max-width: 768px) {
+            .mobile-nav-item.nav-item.active,
+            .mobile-nav-item.active,
+            .mobile-nav .nav-item.active {
+                background: transparent !important;
+                background-color: transparent !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+                border-color: transparent !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Landing Splash Screen -->
